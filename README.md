@@ -64,6 +64,20 @@ npm run dev
 npm run build
 ```
 
+## GitHub Pages 部署
+
+`main` 分支更新後，`.github/workflows/deploy-pages.yml` 會執行靜態輸出並部署至 GitHub Pages。
+
+```bash
+npm run build:pages
+```
+
+靜態輸出位於 `out/`，正式路徑為：
+
+<http://dinopeng.com/taiwan-food-safety/>
+
+Repository 的 **Settings → Pages → Build and deployment → Source** 須設定為 **GitHub Actions**。主網域已由帳號層級的 GitHub Pages 管理，本專案不另放 `CNAME`，避免覆蓋主站網域設定。
+
 ## 建立新的 Git 儲存庫
 
 請先確認目前所在位置是解壓後的 Git-ready 專案根目錄，而不是外層工作資料夾或本機單檔版目錄。
