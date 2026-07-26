@@ -27,5 +27,8 @@ test("server-renders the food safety governance guide", async () => {
   assert.match(html, /property="og:url"[^>]+http:\/\/dinopeng\.com\/taiwan-food-safety\//);
   assert.match(html, /property="og:image"[^>]+opengraph-image\.png/);
   assert.match(html, /name="twitter:image"[^>]+twitter-image\.png/);
+  assert.match(html, /name="app-version"[^>]+0\.1\.1/);
+  assert.match(html, /googletagmanager\.com\/gtag\/js\?id=G-JMBSNGKG9J/);
+  assert.match(html, /gtag\('config', 'G-JMBSNGKG9J'\)/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 });

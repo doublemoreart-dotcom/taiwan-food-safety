@@ -4,6 +4,8 @@
 
 正式網址：<http://dinopeng.com/taiwan-food-safety/>
 
+目前同步版本：`0.1.1`。版本號由 `package.json` 管理，更新流程會與本機單檔版的 `app-version` 交叉檢查。
+
 部署使用 `/taiwan-food-safety/` 子路徑；`next.config.ts` 的 `basePath`、頁面 canonical 與社群分享網址均已對應此路徑。
 
 ## 版本界線
@@ -32,6 +34,8 @@ npm run update
 4. 將 Git-ready 版的 favicon 與社群縮圖同步至本機版。
 5. 先建立暫存封裝，驗證內容後才取代正式 ZIP，避免更新失敗留下半成品。
 6. 產生 `taiwan-food-safety-release.json`，記錄更新時間、檔案大小與 SHA-256。
+
+網站分析使用 Google Analytics 代碼 `G-JMBSNGKG9J`；Git-ready 與本機單檔版皆使用相同代碼。
 
 若只想檢查兩個版本、不產生 ZIP：
 

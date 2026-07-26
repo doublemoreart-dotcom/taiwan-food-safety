@@ -47,6 +47,7 @@ for (const path of requiredPaths) {
 }
 
 const localHtml = readFileSync(localHtmlPath, "utf8");
+const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const requiredLocalMarkers = [
   "台灣食安治理｜回到首頁",
   "smoothScrollToHash",
@@ -57,10 +58,17 @@ const requiredLocalMarkers = [
   'id="check"',
   'rel="icon"',
   'property="og:image"',
+  'name="app-version"',
+  "G-JMBSNGKG9J",
 ];
 
 for (const marker of requiredLocalMarkers) {
   if (!localHtml.includes(marker)) throw new Error(`本機版缺少必要標記：${marker}`);
+}
+
+const localVersion = localHtml.match(/<meta\s+name="app-version"\s+content="([^"]+)"/i)?.[1];
+if (localVersion !== projectPackage.version) {
+  throw new Error(`版本不同步：本機版 ${localVersion ?? "未標示"}，Git-ready 版 ${projectPackage.version}`);
 }
 
 for (const script of localHtml.match(/<script>([\s\S]*?)<\/script>/g) ?? []) {
@@ -142,7 +150,6 @@ verifyZip(gitArchive, ["package.json", "package-lock.json", "app/page.tsx", "app
 ]);
 
 const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
-const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const generatedAt = new Date().toISOString();
 const manifestPath = join(workspaceDirectory, "taiwan-food-safety-release.json");
 const manifest = {

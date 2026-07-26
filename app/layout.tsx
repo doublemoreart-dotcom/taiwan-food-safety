@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 /* The App Router root layout is the document shell, so these font links are global. */
 /* eslint-disable @next/next/no-page-custom-font */
 
 const siteUrl = "http://dinopeng.com/taiwan-food-safety/";
+const releaseVersion = "0.1.1";
+const googleAnalyticsId = "G-JMBSNGKG9J";
 
 export const metadata: Metadata = {
   metadataBase: new URL("http://dinopeng.com/"),
@@ -26,6 +29,9 @@ export const metadata: Metadata = {
     title: "台灣食安管理流程與權責分工",
     description: "從第一責任到事件分流，快速看懂台灣食安治理與權責協作。",
   },
+  other: {
+    "app-version": releaseVersion,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -44,7 +50,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${googleAnalyticsId}');
+          `}
+        </Script>
+      </body>
     </html>
   );
 }
