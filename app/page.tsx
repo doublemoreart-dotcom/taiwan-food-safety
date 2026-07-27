@@ -482,7 +482,7 @@ export default function Home() {
         <div className="hero-copy">
           <p className="eyebrow">TAIWAN FOOD SAFETY GOVERNANCE</p>
           <div className="hero-title-row"><ShieldCheckIcon aria-hidden="true" /><h1>台灣食安管理流程與權責分工</h1></div>
-          <p className="lede">本頁用三個問題拆解台灣食安治理：平時由誰負責、事件發生時如何應變，以及資訊未完整時如何控制風險與判讀責任。</p>
+          <p className="lede">先釐清權責，再用重大事件帶入應變、日常監管與處置門檻；最後檢查制度斷點、補齊事實並判讀責任。</p>
           <div className="hero-links"><a className="primary-link" href="#overview" onClick={(event) => smoothScrollTo(event, "#overview")}><ArrowDownIcon aria-hidden="true" /><span>先看治理全貌</span></a><a href="#incident" onClick={(event) => smoothScrollTo(event, "#incident")}>直接查看應變流程 →</a></div>
         </div>
         <aside className="governance-visual" aria-label="食安治理五方協作主視覺">
