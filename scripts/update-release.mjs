@@ -50,6 +50,7 @@ for (const path of requiredPaths) {
 
 const localHtml = readFileSync(localHtmlPath, "utf8");
 const sourcePage = readFileSync(join(projectDirectory, "app", "page.tsx"), "utf8");
+const sourceCss = readFileSync(join(projectDirectory, "app", "globals.css"), "utf8");
 const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const requiredLocalMarkers = [
   "台灣食安治理｜回到首頁",
@@ -84,6 +85,20 @@ const sharedHomepageCopy = [
 for (const copy of sharedHomepageCopy) {
   if (!localHtml.includes(copy) || !sourcePage.includes(copy)) {
     throw new Error(`首頁共用文案不同步：${copy}`);
+  }
+}
+
+const normalizeCss = (css) => css.replace(/\s+/g, "");
+const normalizedLocalCss = normalizeCss(localHtml);
+const normalizedSourceCss = normalizeCss(sourceCss);
+const sharedHeroTypography = [
+  ["主視覺標題字級", "font-size:clamp(42px,5vw,70px)"],
+  ["主視覺標題行高", "line-height:1.17"],
+];
+
+for (const [label, declaration] of sharedHeroTypography) {
+  if (!normalizedLocalCss.includes(declaration) || !normalizedSourceCss.includes(declaration)) {
+    throw new Error(`${label}不同步：本機版與 Git-ready 版必須同時包含 ${declaration}`);
   }
 }
 
