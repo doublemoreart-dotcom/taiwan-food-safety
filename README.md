@@ -23,17 +23,26 @@
 Git-ready 專案是更新作業的控制入口。完成兩個版本的內容或樣式調整後，在本目錄執行：
 
 ```bash
-npm run update
+npm run release:status
 ```
 
-這個指令會依序：
+這個唯讀指令會顯示目前分支、相對主線的超前／落後狀態、未提交項目、兩版版本號與建議下一步。
+
+確認位於最新 `origin/main` 建立的 `codex/` 分支後，執行：
+
+```bash
+npm run release:prepare
+```
+
+這個指令會先檢查 Repo、分支與主線基礎，再依序：
 
 1. 執行程式規範檢查。
 2. 建置並測試 Git-ready 版。
 3. 檢查本機 `index.html` 的結構、必要入口與互動程式語法。
 4. 將 Git-ready 版的 favicon 與社群縮圖同步至本機版。
-5. 先建立暫存封裝，驗證內容後才取代正式 ZIP，避免更新失敗留下半成品。
-6. 產生 `taiwan-food-safety-release.json`，記錄更新時間、檔案大小與 SHA-256。
+5. 在隔離的候選區建立並驗證本機版、Git-ready 版 ZIP，並排除 `node_modules/`、`out/`、`.next/` 等依賴與建置產物；驗證失敗時保留既有正式檔。
+6. 候選檔全部通過後，一次取代本機素材、兩個 ZIP 與 `taiwan-food-safety-release.json`。
+7. 更新摘要記錄來源分支、提交、`origin/main`、工作區狀態、檔案大小與 SHA-256，方便追查與回退。
 
 網站分析使用 Google Analytics 代碼 `G-JMBSNGKG9J`；Git-ready 與本機單檔版皆使用相同代碼。
 
@@ -49,7 +58,15 @@ npm run check
 npm run sync
 ```
 
-`npm run update` 或 `npm run sync` 成功後才會取代正式 ZIP。更新完成後，仍建議直接開啟本機版 `index.html`，確認排版與互動是否符合預期。
+`npm run release:prepare` 或 `npm run sync` 成功後才會取代正式 ZIP。更新完成後，仍建議直接開啟本機版 `index.html`，確認排版與互動是否符合預期。
+
+完成修改並提交後、推送分支之前，執行：
+
+```bash
+npm run release:preflight
+```
+
+此指令會再次執行完整檢查，並確認目前位於正確的 Git-ready Repo、使用 `codex/` 分支、工作區乾淨、分支包含最新 `origin/main`，且本機版與 Git-ready 版版本一致。完整發布與回退方式請見 [`RELEASE-SAFETY.md`](./RELEASE-SAFETY.md)。
 
 ## 本機開發
 

@@ -1,6 +1,8 @@
 import {
   copyFileSync,
   existsSync,
+  mkdirSync,
+  mkdtempSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -47,6 +49,7 @@ for (const path of requiredPaths) {
 }
 
 const localHtml = readFileSync(localHtmlPath, "utf8");
+const sourcePage = readFileSync(join(projectDirectory, "app", "page.tsx"), "utf8");
 const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const requiredLocalMarkers = [
   "台灣食安治理｜回到首頁",
@@ -60,10 +63,28 @@ const requiredLocalMarkers = [
   'property="og:image"',
   'name="app-version"',
   "G-JMBSNGKG9J",
+  'class="hero-copy"',
+  'class="hero-title-row"',
+  'class="hero-links"',
+  'class="primary-link"',
+  "直接查看應變流程",
 ];
 
 for (const marker of requiredLocalMarkers) {
   if (!localHtml.includes(marker)) throw new Error(`本機版缺少必要標記：${marker}`);
+}
+
+const sharedHomepageCopy = [
+  "台灣食安管理流程與權責分工",
+  "先釐清權責，再用重大事件帶入應變、日常監管與處置門檻；最後檢查制度斷點、補齊事實並判讀責任。",
+  "先看治理全貌",
+  "直接查看應變流程",
+];
+
+for (const copy of sharedHomepageCopy) {
+  if (!localHtml.includes(copy) || !sourcePage.includes(copy)) {
+    throw new Error(`首頁共用文案不同步：${copy}`);
+  }
 }
 
 const localVersion = localHtml.match(/<meta\s+name="app-version"\s+content="([^"]+)"/i)?.[1];
@@ -89,9 +110,6 @@ const commandExists = (command) => {
 for (const command of ["zip", "unzip"]) {
   if (!commandExists(command)) throw new Error(`缺少封裝工具：${command}`);
 }
-
-copyFileSync(join(projectDirectory, "app", "favicon.ico"), join(localDirectory, "favicon.ico"));
-copyFileSync(join(projectDirectory, "app", "opengraph-image.png"), join(localDirectory, "social-preview.png"));
 
 const runZip = (cwd, archive, exclusions = []) => {
   const temporaryArchive = archive.replace(/\.zip$/i, ".tmp.zip");
@@ -128,50 +146,118 @@ const verifyZip = (archive, expectedFiles, forbiddenPrefixes = []) => {
 const commonExclusions = [".DS_Store", "*/.DS_Store", "*.log"];
 const localArchive = join(workspaceDirectory, "taiwan-food-safety-local.zip");
 const gitArchive = join(workspaceDirectory, "taiwan-food-safety-git-ready.zip");
-
-runZip(localDirectory, localArchive, commonExclusions);
-runZip(projectDirectory, gitArchive, [
-  ...commonExclusions,
-  "node_modules/*",
-  ".vinext/*",
-  ".next/*",
-  ".wrangler/*",
-  "dist/*",
-  "coverage/*",
-  ".git/*",
-]);
-
-verifyZip(localArchive, ["index.html", "README.md", "favicon.ico", "social-preview.png"]);
-verifyZip(gitArchive, ["package.json", "package-lock.json", "app/page.tsx", "app/globals.css"], [
-  "node_modules/",
-  ".vinext/",
-  ".next/",
-  ".git/",
-]);
-
 const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
-const generatedAt = new Date().toISOString();
 const manifestPath = join(workspaceDirectory, "taiwan-food-safety-release.json");
-const manifest = {
-  generatedAt,
-  project: projectPackage.name,
-  version: projectPackage.version,
-  node: process.versions.node,
-  artifacts: [
-    {
-      file: "taiwan-food-safety-local.zip",
-      bytes: statSync(localArchive).size,
-      sha256: sha256(localArchive),
-    },
-    {
-      file: "taiwan-food-safety-git-ready.zip",
-      bytes: statSync(gitArchive).size,
-      sha256: sha256(gitArchive),
-    },
-  ],
+const gitValue = (...args) => {
+  const result = spawnSync("git", args, { cwd: projectDirectory, encoding: "utf8" });
+  return result.status === 0 ? result.stdout.trim() : null;
 };
-writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+const replaceAsTransaction = (replacements) => {
+  const backups = [];
+  const installed = [];
+
+  try {
+    for (const { target } of replacements) {
+      if (!existsSync(target)) continue;
+      const backup = `${target}.previous`;
+      rmSync(backup, { force: true, recursive: true });
+      renameSync(target, backup);
+      backups.push({ target, backup });
+    }
+
+    for (const { candidate, target } of replacements) {
+      renameSync(candidate, target);
+      installed.push(target);
+    }
+
+    for (const { backup } of backups) rmSync(backup, { force: true, recursive: true });
+  } catch (error) {
+    for (const target of installed.reverse()) rmSync(target, { force: true, recursive: true });
+    for (const { target, backup } of backups.reverse()) {
+      if (existsSync(backup)) renameSync(backup, target);
+    }
+    throw error;
+  }
+};
+
+const stagingDirectory = mkdtempSync(join(workspaceDirectory, ".tfs-release-"));
+
+try {
+  const stagedLocalDirectory = join(stagingDirectory, "local");
+  mkdirSync(stagedLocalDirectory);
+
+  const stagedFavicon = join(stagedLocalDirectory, "favicon.ico");
+  const stagedSocialPreview = join(stagedLocalDirectory, "social-preview.png");
+  copyFileSync(localHtmlPath, join(stagedLocalDirectory, "index.html"));
+  copyFileSync(join(localDirectory, "README.md"), join(stagedLocalDirectory, "README.md"));
+  copyFileSync(join(projectDirectory, "app", "favicon.ico"), stagedFavicon);
+  copyFileSync(join(projectDirectory, "app", "opengraph-image.png"), stagedSocialPreview);
+
+  const stagedLocalArchive = join(stagingDirectory, "taiwan-food-safety-local.zip");
+  const stagedGitArchive = join(stagingDirectory, "taiwan-food-safety-git-ready.zip");
+  runZip(stagedLocalDirectory, stagedLocalArchive, commonExclusions);
+  runZip(projectDirectory, stagedGitArchive, [
+    ...commonExclusions,
+    "node_modules/*",
+    ".vinext/*",
+    ".next/*",
+    ".wrangler/*",
+    "out/*",
+    "dist/*",
+    "coverage/*",
+    ".git/*",
+  ]);
+
+  verifyZip(stagedLocalArchive, ["index.html", "README.md", "favicon.ico", "social-preview.png"]);
+  verifyZip(stagedGitArchive, ["package.json", "package-lock.json", "app/page.tsx", "app/globals.css"], [
+    "node_modules/",
+    ".vinext/",
+    ".next/",
+    "out/",
+    ".git/",
+  ]);
+
+  const stagedManifest = join(stagingDirectory, "taiwan-food-safety-release.json");
+  const workingTree = gitValue("status", "--porcelain");
+  const manifest = {
+    generatedAt: new Date().toISOString(),
+    project: projectPackage.name,
+    version: projectPackage.version,
+    node: process.versions.node,
+    source: {
+      branch: gitValue("branch", "--show-current"),
+      commit: gitValue("rev-parse", "HEAD"),
+      originMain: gitValue("rev-parse", "origin/main"),
+      workingTree: workingTree ? "dirty" : "clean",
+    },
+    artifacts: [
+      {
+        file: "taiwan-food-safety-local.zip",
+        bytes: statSync(stagedLocalArchive).size,
+        sha256: sha256(stagedLocalArchive),
+      },
+      {
+        file: "taiwan-food-safety-git-ready.zip",
+        bytes: statSync(stagedGitArchive).size,
+        sha256: sha256(stagedGitArchive),
+      },
+    ],
+  };
+  writeFileSync(stagedManifest, `${JSON.stringify(manifest, null, 2)}\n`);
+  JSON.parse(readFileSync(stagedManifest, "utf8"));
+
+  replaceAsTransaction([
+    { candidate: stagedFavicon, target: join(localDirectory, "favicon.ico") },
+    { candidate: stagedSocialPreview, target: join(localDirectory, "social-preview.png") },
+    { candidate: stagedLocalArchive, target: localArchive },
+    { candidate: stagedGitArchive, target: gitArchive },
+    { candidate: stagedManifest, target: manifestPath },
+  ]);
+} finally {
+  rmSync(stagingDirectory, { recursive: true, force: true });
+}
 
 console.log("✓ favicon 與社群縮圖已同步");
-console.log("✓ 本機版與 Git-ready ZIP 已原子更新並驗證");
+console.log("✓ 所有候選檔驗證通過後，已一次取代本機素材、ZIP 與更新摘要");
 console.log(`✓ 更新摘要已建立：${manifestPath}`);
