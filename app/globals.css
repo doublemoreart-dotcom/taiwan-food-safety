@@ -34,7 +34,7 @@ main { overflow-x:clip; }
 .eyebrow,.kicker { color:var(--teal); font-size:13px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
 .hero .eyebrow { color:var(--cyan); }
 h1,h2 { font-family:inherit; }
-h1 { margin:18px 0 24px; font-size:clamp(46px,5.2vw,76px); line-height:1.15; letter-spacing:-.04em; color:var(--indigo); }
+h1 { margin:18px 0 24px; font-size:clamp(42px,5vw,70px); line-height:1.17; letter-spacing:-.04em; color:var(--indigo); }
 .hero h1 { color:white; text-shadow:0 4px 32px rgba(0,0,0,.2); }
 .lede { font-size:20px; line-height:1.8; max-width:760px; color:#4d5a70; }
 .hero .lede { color:#bfd0d8; }
