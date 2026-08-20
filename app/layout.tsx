@@ -5,12 +5,12 @@ import "./globals.css";
 /* The App Router root layout is the document shell, so these font links are global. */
 /* eslint-disable @next/next/no-page-custom-font */
 
-const siteUrl = "http://dinopeng.com/taiwan-food-safety/";
+const siteUrl = "https://dinopeng.com/taiwan-food-safety/";
 const releaseVersion = "0.1.1";
 const googleAnalyticsId = "G-JMBSNGKG9J";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("http://dinopeng.com/"),
+  metadataBase: new URL("https://dinopeng.com/"),
   title: "台灣食安管理流程與權責分工",
   description: "互動理解食品業者、地方政府、中央食藥署、跨部會與司法體系在台灣食安治理中的流程與責任。",
   alternates: {

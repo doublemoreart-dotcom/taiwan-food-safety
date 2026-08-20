@@ -2,7 +2,7 @@
 
 繁體中文互動網站，用來理解食品業者、地方政府、中央食藥署、跨部會與司法體系在台灣食安治理中的流程與責任。
 
-正式網址：<http://dinopeng.com/taiwan-food-safety/>
+正式網址：<https://dinopeng.com/taiwan-food-safety/>
 
 目前同步版本：`0.1.1`。版本號由 `package.json` 管理，更新流程會與本機單檔版的 `app-version` 交叉檢查。
 
@@ -95,7 +95,7 @@ npm run build:pages
 
 靜態輸出位於 `out/`，正式路徑為：
 
-<http://dinopeng.com/taiwan-food-safety/>
+<https://dinopeng.com/taiwan-food-safety/>
 
 Repository 的 **Settings → Pages → Build and deployment → Source** 須設定為 **GitHub Actions**。主網域已由帳號層級的 GitHub Pages 管理，本專案不另放 `CNAME`，避免覆蓋主站網域設定。
 

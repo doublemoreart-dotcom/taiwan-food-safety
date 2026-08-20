@@ -51,6 +51,7 @@ for (const path of requiredPaths) {
 const localHtml = readFileSync(localHtmlPath, "utf8");
 const sourcePage = readFileSync(join(projectDirectory, "app", "page.tsx"), "utf8");
 const sourceCss = readFileSync(join(projectDirectory, "app", "globals.css"), "utf8");
+const sourceLayout = readFileSync(join(projectDirectory, "app", "layout.tsx"), "utf8");
 const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const requiredLocalMarkers = [
   "台灣食安治理｜回到首頁",
@@ -81,6 +82,14 @@ const sharedHomepageCopy = [
   "先看治理全貌",
   "直接查看應變流程",
 ];
+
+const productionUrl = "https://dinopeng.com/taiwan-food-safety/";
+if (!localHtml.includes(productionUrl) || !sourceLayout.includes(productionUrl)) {
+  throw new Error(`正式網址不同步：本機版與 Git-ready 版必須同時使用 ${productionUrl}`);
+}
+if (localHtml.includes("http://dinopeng.com/") || sourceLayout.includes("http://dinopeng.com/")) {
+  throw new Error("正式網址不可退回不安全的 http:// 協定");
+}
 
 for (const copy of sharedHomepageCopy) {
   if (!localHtml.includes(copy) || !sourcePage.includes(copy)) {
