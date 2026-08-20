@@ -24,6 +24,10 @@ const head = git("rev-parse", "--short", "HEAD") || "（無提交）";
 const base = git("rev-parse", "--short", "origin/main") || "（尚未取得）";
 const [ahead = "?", behind = "?"] = (git("rev-list", "--left-right", "--count", "HEAD...origin/main") || "? ?").split(/\s+/);
 const changes = git("status", "--porcelain").split(/\r?\n/).filter(Boolean);
+const uniqueCommits = git("cherry", "origin/main", "HEAD")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("+ "));
+const branchChangesMerged = branch !== "main" && branch !== "master" && ahead !== "0" && uniqueCommits.length === 0;
 
 const projectPackage = JSON.parse(readFileSync(join(projectDirectory, "package.json"), "utf8"));
 const localHtmlPath = join(workspaceDirectory, "taiwan-food-safety-local", "index.html");
@@ -36,6 +40,7 @@ console.log(`  分支：${branch}`);
 console.log(`  目前提交：${head}`);
 console.log(`  origin/main：${base}`);
 console.log(`  相對主線：超前 ${ahead}、落後 ${behind}`);
+console.log(`  尚未進入主線的提交：${uniqueCommits.length}`);
 console.log(`  未提交項目：${changes.length}`);
 console.log(`  版本：本機 ${localVersion}／Git-ready ${projectPackage.version} ${versionMatches ? "✓" : "✗"}`);
 
@@ -43,14 +48,16 @@ let nextStep = "先取得最新主線：git fetch origin main";
 if (base !== "（尚未取得）") {
   if (branch === "main" || branch === "master") {
     nextStep = "從 origin/main 建立 codex/ 開頭的新分支，再開始修改";
+  } else if (branchChangesMerged) {
+    nextStep = "目前分支的修改已進入主線；請從最新 origin/main 建立新的 codex/ 分支";
   } else if (behind !== "0") {
     nextStep = "目前分支落後主線；請從最新 origin/main 建立乾淨分支並移入本次修改";
   } else if (!versionMatches) {
     nextStep = "先同步本機版與 Git-ready 版版本號";
   } else if (changes.length > 0) {
-    nextStep = "完成修改後執行 npm run release:prepare，確認差異並提交";
+    nextStep = "執行 npm run release:prepare；通過後確認差異並提交";
   } else {
-    nextStep = "工作區已乾淨；執行 npm run release:preflight 後才可推送";
+    nextStep = "若修改已提交，執行 npm run release:preflight 建立候選封裝；通過後才可推送";
   }
 }
 

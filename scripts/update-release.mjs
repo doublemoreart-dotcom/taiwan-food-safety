@@ -19,11 +19,11 @@ const projectDirectory = resolve(scriptDirectory, "..");
 const workspaceDirectory = resolve(projectDirectory, "..");
 const localDirectory = join(workspaceDirectory, "taiwan-food-safety-local");
 const localHtmlPath = join(localDirectory, "index.html");
-const mode = process.argv[2] ?? "--package";
+const mode = process.argv[2];
 const supportedModes = new Set(["--check", "--package"]);
 
 if (!supportedModes.has(mode)) {
-  throw new Error(`不支援的更新模式：${mode}`);
+  throw new Error(`不支援的更新模式：${mode ?? "未指定"}；請明確使用 --check 或 --package`);
 }
 
 const parseVersion = (value) => value.split(".").map(Number);

@@ -10,7 +10,7 @@
 ## 建議發布流程
 
 ```bash
-git fetch origin main
+npm run release:refresh
 git switch -c codex/描述本次更新 origin/main
 ```
 
@@ -33,13 +33,16 @@ npm run release:preflight
 
 只有 `release:preflight` 通過後，才推送分支並建立 PR。
 
-三個更新指令的用途固定如下：
+四個主要更新指令的用途固定如下：
 
-- `release:status`：唯讀查看版本、分支、主線差距與未提交項目。
-- `release:prepare`：允許工作區有本次修改，但要求分支已包含最新 `origin/main`；完整驗證後更新本機素材與候選封裝。
-- `release:preflight`：提交後的最後防線；要求工作區乾淨並再次執行完整檢查。
+- `release:refresh`：從遠端取得最新 `origin/main`、更新本機 Git metadata 後顯示狀態；不寫入遠端或產品檔。
+- `release:status`：不連網，查看版本、分支、主線差距、未提交項目與 squash 合併狀態。
+- `release:prepare`：允許工作區有本次修改，但要求分支包含最新 `origin/main`；只做完整驗證，不建立封裝。
+- `release:preflight`：提交後的最後防線；要求工作區乾淨且有未進入主線的提交，再次檢查後建立可追溯候選封裝。
 
-封裝採「候選區 → 內容驗證 → 一次取代」流程。若建立、驗證或取代任一步驟失敗，既有正式 ZIP、摘要與本機素材會保留或自動還原。
+舊的 `npm run update` 是 `release:prepare` 的向後相容別名，只驗證、不封裝。`npm run sync` 與等價的 `npm run package` 則是會同步本機素材並建立或取代 ZIP 與 release manifest 的低階命令；它們不含提交後安全檢查，只能在有意產生封裝時使用。
+
+主流程的封裝採「候選區 → 內容驗證 → 一次取代」，並由提交後的 `release:preflight` 建立。若建立、驗證或取代任一步驟失敗，既有 ZIP、摘要與本機素材會保留或自動還原。
 
 ## 各階段的停止方式
 

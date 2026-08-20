@@ -16,17 +16,17 @@
 - 本專案不引用 `outputs/taiwan-food-safety-local/index.html`。
 - 請只在本目錄執行 `git init`、提交與推送。
 - 請勿把本機單檔版、外層 `outputs/` 或 `work/` 目錄複製進本專案。
-- 本機版與 Git-ready 版不是建置前後關係；內容與功能變更仍須同步修改，但驗證、共用素材同步與封裝已整合為單一更新指令。
+- 本機版與 Git-ready 版不是建置前後關係；內容與功能變更仍須同步修改，但驗證、共用素材同步與封裝已整合為同一套安全更新流程。
 
 ## 建議更新流程
 
 Git-ready 專案是更新作業的控制入口。完成兩個版本的內容或樣式調整後，在本目錄執行：
 
 ```bash
-npm run release:status
+npm run release:refresh
 ```
 
-這個唯讀指令會顯示目前分支、相對主線的超前／落後狀態、未提交項目、兩版版本號與建議下一步。
+這會從遠端取得最新 `origin/main` 並更新本機 Git metadata，再顯示目前分支、相對主線的超前／落後狀態、尚未進入主線的提交、未提交項目、兩版版本號與建議下一步。此步驟不寫入遠端或產品檔；若舊分支已經透過 squash merge 進入主線，也會要求從最新主線另開分支，避免重複發布。
 
 確認位於最新 `origin/main` 建立的 `codex/` 分支後，執行：
 
@@ -34,7 +34,24 @@ npm run release:status
 npm run release:prepare
 ```
 
-這個指令會先檢查 Repo、分支與主線基礎，再依序：
+這個指令會先檢查 Repo、分支與主線基礎，再執行規範檢查、清除舊建置輸出、正式建置、Git-ready 測試與本機版驗證。這一階段不建立 ZIP，避免提交前的封裝摘要記錄到舊 commit 或 dirty 工作區，也避免舊 `dist` 掩蓋本次建置失敗。
+
+確認差異後只提交本次修改：
+
+```bash
+git diff --check
+git status --short
+git add <本次更新檔案>
+git commit -m "描述本次更新"
+```
+
+提交完成後執行：
+
+```bash
+npm run release:preflight
+```
+
+此指令要求工作區乾淨、分支包含最新主線且確實有尚未進入主線的提交，接著再次完成所有檢查，最後才：
 
 1. 執行程式規範檢查。
 2. 建置並測試 Git-ready 版。
@@ -42,7 +59,7 @@ npm run release:prepare
 4. 將 Git-ready 版的 favicon 與社群縮圖同步至本機版。
 5. 在隔離的候選區建立並驗證本機版、Git-ready 版 ZIP，並排除 `node_modules/`、`out/`、`.next/` 等依賴與建置產物；驗證失敗時保留既有正式檔。
 6. 候選檔全部通過後，一次取代本機素材、兩個 ZIP 與 `taiwan-food-safety-release.json`。
-7. 更新摘要記錄來源分支、提交、`origin/main`、工作區狀態、檔案大小與 SHA-256，方便追查與回退。
+7. 更新摘要記錄已提交的來源分支、commit、`origin/main`、乾淨工作區狀態、檔案大小與 SHA-256，方便追查與回退。
 
 網站分析使用 Google Analytics 代碼 `G-JMBSNGKG9J`；Git-ready 與本機單檔版皆使用相同代碼。
 
@@ -58,15 +75,11 @@ npm run check
 npm run sync
 ```
 
-`npm run release:prepare` 或 `npm run sync` 成功後才會取代正式 ZIP。更新完成後，仍建議直接開啟本機版 `index.html`，確認排版與互動是否符合預期。
+`npm run sync` 與等價的 `npm run package` 是低階封裝命令：兩者都會同步本機素材，並建立或取代兩個 ZIP 與 release manifest。它們不會執行 `release:preflight` 的乾淨工作區與提交檢查，只能在確定要產生封裝時明確執行。
 
-完成修改並提交後、推送分支之前，執行：
+舊的 `npm run update` 保留為向後相容入口，目前等同 `npm run release:prepare`，只驗證、不封裝。只有 `npm run release:preflight`，或有意執行上述低階命令成功後，才會取代候選封裝。更新完成後，仍建議直接開啟本機版 `index.html`，確認排版與互動是否符合預期。
 
-```bash
-npm run release:preflight
-```
-
-此指令會再次執行完整檢查，並確認目前位於正確的 Git-ready Repo、使用 `codex/` 分支、工作區乾淨、分支包含最新 `origin/main`，且本機版與 Git-ready 版版本一致。完整發布與回退方式請見 [`RELEASE-SAFETY.md`](./RELEASE-SAFETY.md)。
+`release:preflight` 全部通過後，才推送功能分支並建立 PR；禁止直接推送或合併 `main`。完整發布與回退方式請見 [`RELEASE-SAFETY.md`](./RELEASE-SAFETY.md)。
 
 ## 本機開發
 
@@ -99,18 +112,6 @@ npm run build:pages
 
 Repository 的 **Settings → Pages → Build and deployment → Source** 須設定為 **GitHub Actions**。主網域已由帳號層級的 GitHub Pages 管理，本專案不另放 `CNAME`，避免覆蓋主站網域設定。
 
-## 建立新的 Git 儲存庫
-
-請先確認目前所在位置是解壓後的 Git-ready 專案根目錄，而不是外層工作資料夾或本機單檔版目錄。
-
-```bash
-git init -b main
-git add .
-git commit -m "Initial site"
-```
-
-之後再依 GitHub、GitLab 或其他平台提供的指示加入遠端儲存庫並推送。
-
 ## 專案位置
 
 - `app/page.tsx`：網站內容與互動
@@ -119,4 +120,4 @@ git commit -m "Initial site"
 - `scripts/update-release.mjs`：更新前檢查、共用素材同步、原子 ZIP 封裝與更新摘要
 - `.openai/hosting.json`：Sites 部署能力設定；目前不綁定既有網站
 
-本專案不包含 `node_modules`、建置輸出或既有 Git 紀錄，可安全作為新的儲存庫起點。
+候選 ZIP 會排除 `node_modules`、建置輸出與 `.git`；實際 Git-ready 工作目錄則保留既有 Git 歷史，並只能透過功能分支與 PR 更新。

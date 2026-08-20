@@ -71,6 +71,13 @@ try {
   fail("目前分支不是建立在最新的 origin/main 上；請先更新或重建乾淨分支");
 }
 
+const uniqueCommits = git("cherry", "origin/main", "HEAD")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("+ "));
+if (mode === "--publish" && uniqueCommits.length === 0) {
+  fail("目前分支沒有尚未進入主線的提交；若先前 PR 已合併，請從最新 origin/main 建立新分支");
+}
+
 const localHtmlPath = join(workspaceDirectory, "taiwan-food-safety-local", "index.html");
 if (!existsSync(localHtmlPath)) {
   fail(`找不到本機版：${localHtmlPath}`);
@@ -90,3 +97,8 @@ console.log(`  分支：${branch}`);
 console.log(`  發布候選：${head}`);
 console.log(`  主線基準：${base}`);
 console.log(`  版本：${projectPackage.version}`);
+if (mode === "--prepare") {
+  console.log("  本階段只驗證內容，不建立 ZIP；提交後由 release:preflight 建立可追溯候選封裝");
+} else {
+  console.log(`  待發布提交：${uniqueCommits.length} 筆`);
+}
