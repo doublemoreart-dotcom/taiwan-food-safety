@@ -23,8 +23,9 @@ test("server-renders the food safety governance guide", async () => {
   assert.match(html, /網站載入進度/);
   assert.match(html, /正在準備字型與互動內容/);
   assert.match(html, /rel="icon"[^>]+favicon\.ico/);
-  assert.match(html, /rel="canonical"[^>]+http:\/\/dinopeng\.com\/taiwan-food-safety\//);
-  assert.match(html, /property="og:url"[^>]+http:\/\/dinopeng\.com\/taiwan-food-safety\//);
+  assert.match(html, /rel="canonical"[^>]+https:\/\/dinopeng\.com\/taiwan-food-safety\//);
+  assert.match(html, /property="og:url"[^>]+https:\/\/dinopeng\.com\/taiwan-food-safety\//);
+  assert.doesNotMatch(html, /(?:href|content)="http:\/\/dinopeng\.com\//);
   assert.match(html, /property="og:image"[^>]+opengraph-image\.png/);
   assert.match(html, /name="twitter:image"[^>]+twitter-image\.png/);
   assert.match(html, /name="app-version"[^>]+0\.1\.1/);

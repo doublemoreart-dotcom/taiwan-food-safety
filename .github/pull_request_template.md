@@ -6,7 +6,8 @@
 
 ## 驗證
 
-- [ ] `npm run update` 通過
+- [ ] 開始修改前已執行 `npm run release:refresh`
+- [ ] 提交前 `npm run release:prepare` 通過
 - [ ] 提交後 `npm run release:preflight` 通過
 - [ ] 桌機與手機主要流程已人工確認
 
